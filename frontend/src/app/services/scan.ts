@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ScanService {
-  private apiUrl: string = 'https://web-security-scanner-api.onrender.com/api/scans'; 
+  private apiUrl: string = 'https://web-security-scanner-hduy.onrender.com/api/scans'; 
 
   constructor(private http: HttpClient) {}
 
