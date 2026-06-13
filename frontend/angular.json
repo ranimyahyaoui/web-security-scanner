@@ -19,12 +19,18 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public",
-                "src/_redirects"
-              }
-            ],
+                
+                      "src/favicon.ico",
+                      "src/assets",
+                      "src/_redirects",
+                      "src/vercel.json",
+                      {
+                        "glob": "**/*",
+                        "input": "public",
+                        "output": "/"
+                      }
+                    ],
+            
             "styles": [
               "src/styles.css"
             ]
