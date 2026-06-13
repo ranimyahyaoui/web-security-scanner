@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ScanService {
-  private apiUrl: string = 'http://localhost:3000/api/scans'; 
+  private apiUrl: string = `${environment.apiUrl}/api/scans`;
 
   constructor(private http: HttpClient) {}
 
@@ -17,6 +19,7 @@ export class ScanService {
   getHistory(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/history`); 
   }
+
   downloadRapportPdf(scanId: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/export-pdf/${scanId}`, {
       responseType: 'blob' 
