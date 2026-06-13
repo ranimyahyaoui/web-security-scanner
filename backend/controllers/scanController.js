@@ -132,7 +132,6 @@ const pdfScan = async (req, res) => {
 
     doc.pipe(res);
 
-    // --- Header ---
     doc.rect(0, 0, 612, 80).fill("#0f172a");
 
     doc.fillColor("#fff")
@@ -141,14 +140,12 @@ const pdfScan = async (req, res) => {
 
     let y = 100;
 
-    // --- Target URL ---
     doc.fillColor("#111827").fontSize(12).text("Target URL:", 50, y);
     y += 15;
 
     doc.fillColor("#2563eb").text(scan.url, 50, y);
     y += 25;
 
-    // --- Date ---
     const date = scan.createdAt
       ? new Date(scan.createdAt).toLocaleString("fr-FR")
       : new Date().toLocaleString("fr-FR");
@@ -159,7 +156,6 @@ const pdfScan = async (req, res) => {
     doc.fillColor("#475569").text(date, 50, y);
     y += 30;
 
-    // --- Score ---
     const scoreColor =
       scan.score >= 80 ? "#22c55e" :
       scan.score >= 50 ? "#f59e0b" :
@@ -177,13 +173,11 @@ const pdfScan = async (req, res) => {
 
     y += 80;
 
-    // --- Vulnerabilities ---
     doc.fillColor("#0f172a").fontSize(14).text("VULNERABILITIES", 50, y);
     y += 25;
 
     if (scan.findings?.length) {
       scan.findings.forEach((f, i) => {
-        // Optionnel : Détection de débordement de page si la liste est longue
         if (y > 700) { doc.addPage(); y = 50; }
 
         doc.fillColor("#ef4444")
@@ -203,7 +197,6 @@ const pdfScan = async (req, res) => {
       y += 20;
     }
 
-    // --- Recommendations ---
     y += 10;
     if (y > 700) { doc.addPage(); y = 50; }
 
@@ -214,7 +207,7 @@ const pdfScan = async (req, res) => {
     y += 25;
 
     const h = scan.headers || {};
-    const ef = scan.exposedFiles || []; // Récupération des fichiers exposés
+    const ef = scan.exposedFiles || []; 
 
     const addReco = (title, desc) => {
       if (y > 720) { doc.addPage(); y = 50; }
@@ -227,7 +220,6 @@ const pdfScan = async (req, res) => {
 
     let has = false;
 
-    // 1. Reco CSP
     if (!h.csp) {
       has = true;
       addReco(
@@ -236,7 +228,6 @@ const pdfScan = async (req, res) => {
       );
     }
 
-    // 2. Reco HSTS
     if (!h.hsts) {
       has = true;
       addReco(
@@ -245,7 +236,6 @@ const pdfScan = async (req, res) => {
       );
     }
 
-    // 3. Reco X-Frame
     if (!h.xFrame) {
       has = true;
       addReco(
@@ -254,7 +244,6 @@ const pdfScan = async (req, res) => {
       );
     }
 
-    // 🚀 4. NOUVELLE RECOMMANDATION : Fichiers Sensibles Exposés
     if (ef.length > 0) {
       has = true;
       addReco(
@@ -269,7 +258,6 @@ const pdfScan = async (req, res) => {
       y += 20;
     }
 
-    // --- Footer ---
     y += 40;
     if (y > 750) { doc.addPage(); y = 750; }
     
