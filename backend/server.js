@@ -4,7 +4,7 @@ const cors = require('cors');
 
 const allowedOrigins = [
   'http://localhost:4200', 
-  'https://votre-projet-front.vercel.app' 
+  process.env.FRONT_URL
 ];
 
 
