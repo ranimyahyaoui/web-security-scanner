@@ -177,6 +177,63 @@ h2 {
   border-radius: 6px;
 }
 
+/* Onglets */
+.server-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #1f293d;
+  padding-bottom: 0.5rem;
+}
+
+.server-tabs button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.server-tabs button:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: #f1f5f9;
+}
+
+.server-tabs button.active {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+/* Boîte de Code */
+.code-box-container {
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 1.25rem;
+  position: relative;
+  overflow-x: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.code-box-container pre {
+  margin: 0;
+}
+
+.code-box-container code {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  color: #38bdf8; /* Couleur cyan typée code */
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
 .bg-success, .success { color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.3); }
 .bg-warning, .warning { color: #fbbf24; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); }
 .bg-danger, .danger { color: #f87171; background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.3); }

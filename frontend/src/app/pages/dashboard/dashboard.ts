@@ -59,4 +59,5 @@ export class Dashboard implements OnInit {
     if (score >= 40) return 'warning';
     return 'danger';
   }
+  
 }

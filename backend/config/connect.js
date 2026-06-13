@@ -1,5 +1,5 @@
 const mongoose=require('mongoose');
-const dbURI = process.env.MONGO_URI || process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/mon-projet';
+const dbURI ='mongodb://127.0.0.1:27017/web_scanner';
 mongoose.connect(dbURI)
     .then(
         ()=>{
@@ -12,3 +12,4 @@ mongoose.connect(dbURI)
             console.log(err);
         }
     )
+//  process.env.MONGO_URI || process.env.MONGO_URL ||

@@ -60,6 +60,26 @@
         <li><span>SameSite Attribute:</span> <strong>{{ result.cookies?.sameSite ? '✅ Configured' : '❌ Missing' }}</strong></li>
       </ul>
     </div>
+    <div class="security-card sensitive-files-section">
+  <h3><i class="fas fa-folder-open"></i> SENSITIVE FILES EXPOSURE</h3>
+  
+  <div *ngIf="result?.exposedFiles?.length > 0" class="exposed-files-list">
+    <div class="alert-banner-danger">
+      ⚠️ CRITICAL ALERT: Sensitive files have been detected on this server!
+    </div>
+    <ul>
+      <li *ngFor="let file of result.exposedFiles" class="file-item exposed">
+        <span class="status-badge missing">❌ Exposed</span> {{ file }}
+      </li>
+    </ul>
+  </div>
+
+  <div *ngIf="result?.exposedFiles?.length === 0" class="safe-files-status">
+    <div class="alert-banner-success">
+      ✅ Secure: No sensitive development or configuration files were found exposed.
+    </div>
+  </div>
+</div>
 
     <div class="section">
       <h3>⚠️ Vulnerabilities & Findings</h3>
