@@ -1,4 +1,3 @@
-# web-security-scanner
 # Web Security Scanner
 
 ## Overview
