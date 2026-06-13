@@ -1,0 +1,81 @@
+<div class="container">
+  <h2>📊 Cyber Security Overview</h2>
+  <p class="subtitle">Vue d'ensemble de vos activités d'audit et de l'état de santé de vos applications cibles.</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-icon">🔍</span>
+      <div class="kpi-data">
+        <h3>Total Scans</h3>
+        <p class="kpi-value">{{ totalScans }}</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-icon">📈</span>
+      <div class="kpi-data">
+        <h3>Score Moyen</h3>
+        <p class="kpi-value" [ngClass]="getColorClass(averageScore)">{{ averageScore }}/100</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-icon">🚨</span>
+      <div class="kpi-data">
+        <h3>Sites Critiques</h3>
+        <p class="kpi-value text-danger">{{ dangerCount }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <h3>🛡️ Répartition des niveaux de sécurité</h3>
+    
+    <div class="bar-container">
+      <div class="bar-label">🔒 Sécurisés (≥ 75) <span>{{ secureCount }} sites ({{ getPercentage(secureCount) }}%)</span></div>
+      <div class="progress-track">
+        <div class="progress-bar bg-success" [style.width.%]="getPercentage(secureCount)"></div>
+      </div>
+    </div>
+
+    <div class="bar-container">
+      <div class="bar-label">⚠️ À surveiller (40-74) <span>{{ warningCount }} sites ({{ getPercentage(warningCount) }}%)</span></div>
+      <div class="progress-track">
+        <div class="progress-bar bg-warning" [style.width.%]="getPercentage(warningCount)"></div>
+      </div>
+    </div>
+
+    <div class="bar-container">
+      <div class="bar-label">❌ Dangereux (&lt; 40) <span>{{ dangerCount }} sites ({{ getPercentage(dangerCount) }}%)</span></div>
+      <div class="progress-track">
+        <div class="progress-bar bg-danger" [style.width.%]="getPercentage(dangerCount)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tables-layout">
+    
+    <div class="table-box">
+      <h3>📜 Dernières analyses</h3>
+      <p *ngIf="recentScans.length === 0" class="empty-text">Aucun scan récent.</p>
+      <div class="data-list" *ngIf="recentScans.length > 0">
+        <div class="data-row" *ngFor="let s of recentScans">
+          <span class="data-url">{{ s.url }}</span>
+          <span class="badge" [ngClass]="getColorClass(s.score)">{{ s.score }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-box border-danger">
+      <h3>🛑 Menaces détectées (Score faible)</h3>
+      <p *ngIf="dangerousSites.length === 0" class="empty-text text-success">🎉 Excellente nouvelle : aucune menace active !</p>
+      <div class="data-list" *ngIf="dangerousSites.length > 0">
+        <div class="data-row alert-row" *ngFor="let s of dangerousSites">
+          <span class="data-url text-danger">⚠️ {{ s.url }}</span>
+          <span class="badge danger">{{ s.score }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

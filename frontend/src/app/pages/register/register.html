@@ -1,0 +1,53 @@
+<div class="scanner-auth-wrapper">
+  <div class="auth-card">
+    <div class="brand-header">
+      <div class="scanner-logo">
+        <span class="pulse-icon pulse-green"></span>
+        <i class="shield-icon">📝</i>
+      </div>
+      <h2>ENREGISTREMENT</h2>
+      <p class="subtitle">Création des accès de l'analyste</p>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="onSubmit()">
+      
+      <div class="form-group">
+        <label for="email">Identifiant Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          [(ngModel)]="userData.email" 
+          name="email" 
+          required 
+          placeholder="analyst@webscanner.local"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe réseau</label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="userData.password" 
+          name="password" 
+          required 
+          placeholder="Créer un mot de passe fort"
+        >
+      </div>
+
+      @if (message) {
+        <div class="alert-banner" [ngClass]="{'alert-success': isSuccess, 'alert-danger': !isSuccess}">
+          <span>{{ isSuccess ? '✅' : '❌' }}</span> {{ message }}
+        </div>
+      }
+
+      <button type="submit" class="btn-green-neon">
+        <span>ENREGISTRER LE PROFIL</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Déjà accrédité ? <a routerLink="/login" class="link-neon">Se connecter</a></p>
+    </div>
+  </div>
+</div>

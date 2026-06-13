@@ -1,0 +1,77 @@
+<div class="container">
+
+  <h2>🔐 Cyber Security Scanner</h2>
+
+  <div class="search-box">
+    <input [(ngModel)]="url" placeholder="https://example.com" [disabled]="loading">
+    <button (click)="launchScan()" [disabled]="loading">
+      {{ loading ? 'Scanning...' : 'Start Scan' }}
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="spinner-container">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">⚡ Analysis in progress... Moteur Puppeteer actif.</p>
+  </div>
+
+  <div *ngIf="result && !loading" class="result-card">
+
+    <div class="section header-result">
+      <h3>📊 Score Global</h3>
+      <div class="score" [ngClass]="getColor(result.score || 0)">
+        {{ result.score }} / 100
+      </div>
+      <button class="btn btn-pdf" (click)="downloadPDF(result._id)">
+        📥 Télécharger le Rapport PDF
+      </button>
+    </div>
+
+    <div class="section">
+      <h3>🌐 Target URL</h3>
+      <p class="url-text">{{ result.url }}</p>
+    </div>
+
+    <div class="section">
+      <h3>🔐 SSL Certificate</h3>
+      <p>Valid: <strong [style.color]="result.ssl?.valid ? '#4ade80' : '#f87171'">{{ result.ssl?.valid ? 'YES' : 'NO' }}</strong></p>
+      <p>Protocol: {{ result.ssl?.protocol || 'Unknown' }}</p>
+    </div>
+
+    <div class="section">
+      <h3>📦 Security Headers</h3>
+      <ul>
+        <li><span>CSP (Content Security Policy):</span> <strong>{{ result.headers?.csp ? '✅ Detected' : '❌ Missing' }}</strong></li>
+        <li><span>HSTS (Strict Transport Security):</span> <strong>{{ result.headers?.hsts ? '✅ Detected' : '❌ Missing' }}</strong></li>
+        <li><span>X-Frame-Options:</span> <strong>{{ result.headers?.xFrame ? '✅ Detected' : '❌ Missing' }}</strong></li>
+        <li><span>X-Content-Type-Options:</span> <strong>{{ result.headers?.xContent ? '✅ Detected' : '❌ Missing' }}</strong></li>
+        <li><span>Referrer-Policy:</span> <strong>{{ result.headers?.referrer ? '✅ Detected' : '❌ Missing' }}</strong></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>🍪 Cookie Security</h3>
+      <ul>
+        <li><span>Secure Flag:</span> <strong>{{ result.cookies?.secure ? '✅ Active' : '❌ Insecure' }}</strong></li>
+        <li><span>HttpOnly Flag:</span> <strong>{{ result.cookies?.httpOnly ? '✅ Active' : '❌ Insecure' }}</strong></li>
+        <li><span>SameSite Attribute:</span> <strong>{{ result.cookies?.sameSite ? '✅ Configured' : '❌ Missing' }}</strong></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>⚠️ Vulnerabilities & Findings</h3>
+      <ul *ngIf="result.findings && result.findings.length > 0" class="findings-list">
+        <li *ngFor="let f of result.findings">
+          ⚠️ {{ f }}
+        </li>
+      </ul>
+      <p *ngIf="!result.findings || result.findings.length === 0" style="color: #4ade80; font-weight: bold;">
+        🎉 No major vulnerabilities found!
+      </p>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<div class="scanner-auth-wrapper">
+  <div class="auth-card">
+    <div class="brand-header">
+      <div class="scanner-logo">
+        <span class="pulse-icon"></span>
+        <i class="shield-icon">🛡️</i>
+      </div>
+      <h2>WEB<span class="text-neon">SCANNER</span></h2>
+      <p class="subtitle">Authentification requise pour accéder au terminal</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="send()">
+      
+      <div class="form-group">
+        <label for="email">Adresse Email</label>
+        <div class="input-container">
+          <input 
+            type="email" 
+            id="email"
+            formControlName="email"
+            placeholder="email@email.com"
+            [ngClass]="{'input-error': loginForm.controls['email'].invalid && loginForm.controls['email'].touched}"
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Clé de Sécurité (Password)</label>
+        <div class="input-container">
+          <input 
+            type="password" 
+            id="password"
+            formControlName="password"
+            placeholder="••••••••••••"
+            [ngClass]="{'input-error': loginForm.controls['password'].invalid && loginForm.controls['password'].touched}"
+          >
+        </div>
+      </div>
+
+      @if (errorMessage) {
+        <div class="alert-banner alert-danger animate-fade-in">
+          <span class="alert-icon">⚠️</span> {{ errorMessage }}
+        </div>
+      }
+
+      <button type="submit" [disabled]="loginForm.invalid" class="btn-cyan-neon">
+        <span>INITIALISER LA CONNEXION</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Nouvel opérateur ? <a routerLink="/register" class="link-neon">Créer un compte d'accès</a></p>
+    </div>
+  </div>
+</div>

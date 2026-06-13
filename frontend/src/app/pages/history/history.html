@@ -1,0 +1,58 @@
+<div class="container">
+  <h2>📜 Historique des Analyses</h2>
+
+  <div *ngIf="!selectedScan" class="history-table-container">
+    <p *ngIf="history.length === 0" class="empty-text">Aucun scan enregistré pour le moment.</p>
+    
+    <div *ngIf="history.length > 0" class="scan-list">
+      <div *ngFor="let scan of history" class="scan-row" (click)="viewDetails(scan)">
+        <div class="scan-meta">
+          <span class="scan-url">{{ scan.url }}</span>
+          <span class="scan-date">{{ scan.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="scan-score-badge" [ngClass]="getColor(scan.score)">
+          {{ scan.score }}/100
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="selectedScan" class="detail-container">
+    <button class="back-btn" (click)="closeDetails()">⬅️ Retour à la liste</button>
+
+    <div class="result-card">
+      <div class="section">
+        <h3>📊 Score Global</h3>
+        <div class="score" [ngClass]="getColor(selectedScan.score)">{{ selectedScan.score }} / 100</div>
+      </div>
+
+      <div class="section">
+        <h3>🌐 URL Analysée</h3>
+        <p class="url-text">{{ selectedScan.url }}</p>
+      </div>
+
+      <div class="section">
+        <h3>🔐 Certificat SSL</h3>
+        <p>Valide : <strong [style.color]="selectedScan.ssl?.valid ? '#4ade80' : '#f87171'">{{ selectedScan.ssl?.valid ? 'OUI' : 'NON' }}</strong></p>
+        <p>Protocole : {{ selectedScan.ssl?.protocol }}</p>
+      </div>
+
+      <div class="section">
+        <h3>📦 En-têtes de Sécurité</h3>
+        <ul>
+          <li>CSP : <strong>{{ selectedScan.headers?.csp ? '✅ Détecté' : '❌ Manquant' }}</strong></li>
+          <li>HSTS : <strong>{{ selectedScan.headers?.hsts ? '✅ Détecté' : '❌ Manquant' }}</strong></li>
+          <li>X-Frame-Options : <strong>{{ selectedScan.headers?.xFrame ? '✅ Détecté' : '❌ Manquant' }}</strong></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h3>⚠️ Failles Détectées</h3>
+        <ul *ngIf="selectedScan.findings?.length > 0" class="findings-list">
+          <li *ngFor="let f of selectedScan.findings">⚠️ {{ f }}</li>
+        </ul>
+        <p *ngIf="!selectedScan.findings || selectedScan.findings.length === 0" style="color: #4ade80;">🎉 Configuration sécurisée</p>
+      </div>
+    </div>
+  </div>
+</div>
