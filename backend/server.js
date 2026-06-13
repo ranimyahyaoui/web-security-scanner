@@ -5,15 +5,7 @@ require('./config/connect');
 
 const app = express(); 
 
-app.use(cors({
-  origin: [
-    'https://web-security-scanner-two.vercel.app',
-    'http://localhost:4200'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(cors());
 
 app.use(express.json());
 
