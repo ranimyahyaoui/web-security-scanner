@@ -15,7 +15,7 @@ const scanRoutes = require('./routes/scanRoutes');
 app.use("/api/auth", authRoutes);
 app.use("/api/scans", scanRoutes);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 8080;
+app.listen(PORT,'0.0.0.0', () => {
     console.log("serveur running");
 });
