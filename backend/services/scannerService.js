@@ -1,6 +1,5 @@
 const axios = require('axios');
 
-
 const headersScanner = (headers = {}) => {
   const clean = {};
   Object.keys(headers).forEach(k => (clean[k.toLowerCase()] = headers[k]));
@@ -77,7 +76,6 @@ const cookieScanner = (cookies = []) => {
   };
 };
 
-
 const SCORE_WEIGHTS = {
   ssl: 20,
   cspPresent: 5,
@@ -131,7 +129,6 @@ const scoreCalculator = (ssl, headers, cookies, exposedFiles) => {
   return Math.max(0, Math.min(100, score));
 };
 
-
 const SENSITIVE_FILES = [
   { name: "Fichier d'environnement (.env)", path: '/.env', severity: 'critical' },
   { name: "Fichier d'environnement local (.env.local)", path: '/.env.local', severity: 'critical' },
@@ -166,7 +163,7 @@ const CONTENT_SIGNATURES = {
   '/.env.production': ['=', 'KEY=', 'SECRET='],
   '/.git/config': ['[core]', '[remote', 'repositoryformatversion'],
   '/.git/HEAD': ['ref:', 'refs/heads/'],
-  '/wp-config.php': ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'table_prefix'],
+  '/.wp-config.php': ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'table_prefix'],
   '/wp-config.txt': ['DB_NAME', 'DB_USER', 'DB_PASSWORD'],
   '/docker-compose.yml': ['version:', 'services:', 'image:'],
   '/nginx.conf': ['server {', 'listen ', 'location '],
@@ -177,9 +174,19 @@ const CONTENT_SIGNATURES = {
   '/deploy.sh': ['#!/bin/', 'ssh ', 'rsync '],
 };
 
+const isRealFileContent = (path, content, contentType, soft404Length = 0) => {
+  if (soft404Length > 0 && typeof content === 'string') {
+    const diff = Math.abs(content.length - soft404Length);
+    if (diff < 200) {
+      return false;
+    }
+  }
 
-const isRealFileContent = (path, content, contentType) => {
   if (contentType && contentType.includes('text/html') && !path.endsWith('.php')) {
+    return false;
+  }
+
+  if (typeof content === 'string' && (content.includes('window.location') || content.includes('http-equiv="refresh"'))) {
     return false;
   }
 
@@ -198,6 +205,19 @@ const isRealFileContent = (path, content, contentType) => {
 const checkSensitiveFiles = async (baseUrl) => {
   const exposed = [];
   const baseUrlClean = baseUrl.replace(/\/$/, '');
+
+  let soft404Length = 0;
+  try {
+    const fakeUrl = `${baseUrlClean}/anti-canary-${Math.random().toString(36).substring(7)}.html`;
+    const baselineRes = await axios.get(fakeUrl, {
+      timeout: 2000,
+      responseType: 'text',
+      validateStatus: () => true,
+    });
+    if (baselineRes.status === 200 && typeof baselineRes.data === 'string') {
+      soft404Length = baselineRes.data.length;
+    }
+  } catch {}
 
   const BATCH_SIZE = 5;
   for (let i = 0; i < SENSITIVE_FILES.length; i += BATCH_SIZE) {
@@ -220,7 +240,7 @@ const checkSensitiveFiles = async (baseUrl) => {
           const contentType = response.headers['content-type'] || '';
           const content = typeof response.data === 'string' ? response.data : '';
 
-          if (isRealFileContent(file.path, content, contentType)) {
+          if (isRealFileContent(file.path, content, contentType, soft404Length)) {
             return { ...file, url: targetUrl };
           }
           return null;
@@ -239,7 +259,6 @@ const checkSensitiveFiles = async (baseUrl) => {
 
   return exposed;
 };
-
 
 const buildFindings = (ssl, headers, cookies, exposedFiles) => {
   const findings = [];
@@ -300,7 +319,6 @@ const buildFindings = (ssl, headers, cookies, exposedFiles) => {
   return findings;
 };
 
-
 const scanWebsite = async (url) => {
   let browser;
   try {
@@ -355,7 +373,6 @@ const scanWebsite = async (url) => {
     await browser.close();
     browser = null;
 
-    // Analyses
     const exposedFiles = await checkSensitiveFiles(finalUrl);
     const ssl = {
       valid: finalUrl.startsWith('https'),
