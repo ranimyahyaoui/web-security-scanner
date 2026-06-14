@@ -81,7 +81,7 @@ const checkSensitiveFiles = async (baseUrl) => {
     });
     
     if (baselineRes.status === 200) {
-      soft404Content = typeof baselineRes.data === 'string' ? baselineRes.data.substring(0, 1000) : null;
+      soft404Content = typeof baselineRes.data === 'string' ? baselineRes.data : null;
     }
   } catch (e) {
   }
@@ -99,7 +99,7 @@ const checkSensitiveFiles = async (baseUrl) => {
       const body = response.data;
 
       if (soft404Content && typeof body === 'string') {
-        if (body.substring(0, 1000) === soft404Content || body === soft404Content) {
+        if (body.substring(0, 1000) === soft404Content.substring(0, 1000) || body === soft404Content) {
           continue; 
         }
       }
@@ -109,7 +109,12 @@ const checkSensitiveFiles = async (baseUrl) => {
       }
 
       if (file.keywords && typeof body === 'string') {
-        const hasKeyword = file.keywords.some(keyword => body.includes(keyword));
+        const hasKeyword = file.keywords.some(keyword => {
+          const inBody = body.includes(keyword);
+          const inSoft404 = soft404Content ? soft404Content.includes(keyword) : false;
+          return inBody && !inSoft404;
+        });
+        
         if (!hasKeyword) {
           continue; 
         }
@@ -123,6 +128,8 @@ const checkSensitiveFiles = async (baseUrl) => {
 
   return exposed;
 };
+
+module.exports = { checkSensitiveFiles };
 
 
 const scanWebsite = async (url) => {
