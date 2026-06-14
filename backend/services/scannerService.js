@@ -37,8 +37,6 @@ const scoreCalculator = (ssl, headers, cookies, exposedFilesCount) => {
   return Math.max(0, score); 
 };
 
-const axios = require('axios');
-
 const checkSensitiveFiles = async (baseUrl) => {
   const filesToTest = [
     { name: "Fichier d'environnement (.env)", path: '/.env', keywords: ['DB_', 'SECRET', 'APP_ENV', 'AWS_'] },
@@ -71,17 +69,16 @@ const checkSensitiveFiles = async (baseUrl) => {
   let exposed = [];
   const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 
-  let soft404Content = null;
+  let soft404Length = 0;
   try {
-    const fakeUrl = `${cleanBaseUrl}/comportement-erreur-aleatoire-${Math.random().toString(36).substring(7)}.html`;
+    const fakeUrl = `${cleanBaseUrl}/anti-false-positive-${Math.random().toString(36).substring(7)}.html`;
     const baselineRes = await axios.get(fakeUrl, { 
       timeout: 2000, 
       responseType: 'text',
       validateStatus: () => true 
     });
-    
-    if (baselineRes.status === 200) {
-      soft404Content = typeof baselineRes.data === 'string' ? baselineRes.data : null;
+    if (baselineRes.status === 200 && typeof baselineRes.data === 'string') {
+      soft404Length = baselineRes.data.length;
     }
   } catch (e) {
   }
@@ -89,7 +86,6 @@ const checkSensitiveFiles = async (baseUrl) => {
   for (const file of filesToTest) {
     try {
       const targetUrl = `${cleanBaseUrl}${file.path}`;
-      
       const response = await axios.get(targetUrl, { 
         timeout: 2000, 
         responseType: 'text',
@@ -97,24 +93,27 @@ const checkSensitiveFiles = async (baseUrl) => {
       });
 
       const body = response.data;
+      if (typeof body !== 'string') continue;
 
-      if (soft404Content && typeof body === 'string') {
-        if (body.substring(0, 1000) === soft404Content.substring(0, 1000) || body === soft404Content) {
-          continue; 
+      if (soft404Length > 0) {
+        const lengthDifference = Math.abs(body.length - soft404Length);
+        if (lengthDifference < 150) {
+          continue;
         }
       }
 
-      if (typeof body === 'string' && (body.includes('window.location') || body.includes('http-equiv="refresh"'))) {
+      if (body.includes('window.location') || body.includes('http-equiv="refresh"')) {
         continue;
       }
 
-      if (file.keywords && typeof body === 'string') {
-        const hasKeyword = file.keywords.some(keyword => {
-          const inBody = body.includes(keyword);
-          const inSoft404 = soft404Content ? soft404Content.includes(keyword) : false;
-          return inBody && !inSoft404;
-        });
-        
+      if (file.path.endsWith('.txt') || file.path.endsWith('.env') || file.path.endsWith('.conf')) {
+        if (body.toLowerCase().includes('<html') || body.toLowerCase().includes('<body')) {
+          continue;
+        }
+      }
+
+      if (file.keywords) {
+        const hasKeyword = file.keywords.some(keyword => body.includes(keyword));
         if (!hasKeyword) {
           continue; 
         }
@@ -129,7 +128,7 @@ const checkSensitiveFiles = async (baseUrl) => {
   return exposed;
 };
 
-module.exports = { checkSensitiveFiles };
+
 
 
 const scanWebsite = async (url) => {
