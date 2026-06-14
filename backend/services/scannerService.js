@@ -175,9 +175,24 @@ const CONTENT_SIGNATURES = {
 };
 
 const isRealFileContent = (path, content, contentType, soft404Length = 0) => {
-  if (soft404Length > 0 && typeof content === 'string') {
+  if (typeof content !== 'string') return false;
+
+  const lowerContent = content.toLowerCase();
+  const isHtmlStructure = lowerContent.includes('<html') || 
+                          lowerContent.includes('<body') || 
+                          lowerContent.includes('<head') || 
+                          lowerContent.includes('<!doctype html');
+
+  const textExtensions = ['.env', '.txt', '.conf', '.htaccess', '.yml', '.yaml', '.sh', '.log'];
+  const isTextFile = textExtensions.some(ext => path.endsWith(ext)) || path.includes('/.env');
+  
+  if (isTextFile && isHtmlStructure) {
+    return false;
+  }
+
+  if (soft404Length > 0) {
     const diff = Math.abs(content.length - soft404Length);
-    if (diff < 200) {
+    if (diff < 500) {
       return false;
     }
   }
@@ -186,7 +201,7 @@ const isRealFileContent = (path, content, contentType, soft404Length = 0) => {
     return false;
   }
 
-  if (typeof content === 'string' && (content.includes('window.location') || content.includes('http-equiv="refresh"'))) {
+  if (content.includes('window.location') || content.includes('http-equiv="refresh"')) {
     return false;
   }
 
@@ -196,7 +211,7 @@ const isRealFileContent = (path, content, contentType, soft404Length = 0) => {
   }
 
   if (path.endsWith('.zip') || path.endsWith('.sqlite') || path.endsWith('.sql')) {
-    return content.length > 0;
+    return content.length > 0 && !isHtmlStructure;
   }
 
   return true;
@@ -208,11 +223,12 @@ const checkSensitiveFiles = async (baseUrl) => {
 
   let soft404Length = 0;
   try {
-    const fakeUrl = `${baseUrlClean}/anti-canary-${Math.random().toString(36).substring(7)}.html`;
+    const fakeUrl = `${baseUrlClean}/anti-canary-${Math.random().toString(36).substring(7)}.txt`;
     const baselineRes = await axios.get(fakeUrl, {
-      timeout: 2000,
+      timeout: 3000,
       responseType: 'text',
       validateStatus: () => true,
+      headers: { 'Accept': 'text/plain,text/html' }
     });
     if (baselineRes.status === 200 && typeof baselineRes.data === 'string') {
       soft404Length = baselineRes.data.length;
