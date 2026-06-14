@@ -39,47 +39,77 @@ const scoreCalculator = (ssl, headers, cookies, exposedFilesCount) => {
 
 const checkSensitiveFiles = async (baseUrl) => {
   const filesToTest = [
-    { name: "Fichier d'environnement (.env)", path: '/.env' },
-    { name: "Fichier d'environnement local (.env.local)", path: '/.env.local' },
-    { name: "Fichier d'environnement de production (.env.production)", path: '/.env.production' },
-    { name: "Exemple d'environnement (.env.example)", path: '/.env.example' },
-    { name: 'Dossier Git Interne (.git/HEAD)', path: '/.git/HEAD' },
-    { name: 'Configuration Git (.git/config)', path: '/.git/config' },
-    { name: 'Fichier d\'index Git (.git/index)', path: '/.git/index' },
+    { name: "Fichier d'environnement (.env)", path: '/.env', keywords: ['DB_', 'SECRET', 'APP_ENV', 'AWS_'] },
+    { name: "Fichier d'environnement local (.env.local)", path: '/.env.local', keywords: ['DB_', 'SECRET'] },
+    { name: "Fichier d'environnement de production (.env.production)", path: '/.env.production', keywords: ['DB_', 'SECRET'] },
+    { name: "Exemple d'environnement (.env.example)", path: '/.env.example', keywords: ['DB_', 'SECRET'] },
+    { name: 'Dossier Git Interne (.git/HEAD)', path: '/.git/HEAD', keywords: ['ref: refs/'] },
+    { name: 'Configuration Git (.git/config)', path: '/.git/config', keywords: ['[core]', '[remote'] },
+    { name: 'Fichier d\'index Git (.git/index)', path: '/.git/index' }, 
     { name: 'Dossier Subversion (.svn/entries)', path: '/.svn/entries' },
-    { name: 'Configuration WordPress (wp-config.php)', path: '/wp-config.php' },
-    { name: 'Configuration de build WordPress (wp-config.txt)', path: '/wp-config.txt' },
-    { name: 'Configuration Nginx (nginx.conf)', path: '/nginx.conf' },
-    { name: 'Configuration Apache (.htaccess)', path: '/.htaccess' },
+    { name: 'Configuration WordPress (wp-config.php)', path: '/wp-config.php', keywords: ['DB_PASSWORD', 'wp-settings.php'] },
+    { name: 'Configuration de build WordPress (wp-config.txt)', path: '/wp-config.txt', keywords: ['DB_PASSWORD'] },
+    { name: 'Configuration Nginx (nginx.conf)', path: '/nginx.conf', keywords: ['server {', 'listen '] },
+    { name: 'Configuration Apache (.htaccess)', path: '/.htaccess', keywords: ['RewriteEngine', 'AuthType'] },
     { name: 'Archive du site web (backup.zip)', path: '/backup.zip' },
     { name: 'Archive du site web (site.zip)', path: '/site.zip' },
     { name: 'Archive de code source (src.zip)', path: '/src.zip' },
     { name: 'Fichier de configuration de secours (config.bak)', path: '/config.bak' },
-    { name: 'Fichier de base de données de secours (backup.sql)', path: '/backup.sql' },
-    { name: 'Base de données SQL (db.sql)', path: '/db.sql' },
+    { name: 'Fichier de base de données de secours (backup.sql)', path: '/backup.sql', keywords: ['INSERT INTO', 'CREATE TABLE'] },
+    { name: 'Base de données SQL (db.sql)', path: '/db.sql', keywords: ['INSERT INTO', 'CREATE TABLE'] },
     { name: 'Base de données SQLite (database.sqlite)', path: '/database.sqlite' },
     { name: 'Base de données SQLite standard (db.sqlite)', path: '/db.sqlite' },
-    { name: 'Fichier de Logs d\'erreurs (error_log)', path: '/error_log' },
-    { name: 'Logs d\'erreurs PHP (php_errors.log)', path: '/php_errors.log' },
-    { name: 'Clé SSH Privée (id_rsa)', path: '/.ssh/id_rsa' },
-    { name: 'Configuration Docker Compose (docker-compose.yml)', path: '/docker-compose.yml' },
-    { name: 'Configuration de déploiement (deploy.sh)', path: '/deploy.sh' }
+    { name: 'Fichier de Logs d\'erreurs (error_log)', path: '/error_log', keywords: ['PHP Fatal error', 'Stack trace'] },
+    { name: 'Logs d\'erreurs PHP (php_errors.log)', path: '/php_errors.log', keywords: ['PHP Warning', 'PHP Notice'] },
+    { name: 'Clé SSH Privée (id_rsa)', path: '/.ssh/id_rsa', keywords: ['-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN OPENSSH PRIVATE KEY-----'] },
+    { name: 'Configuration Docker Compose (docker-compose.yml)', path: '/docker-compose.yml', keywords: ['version:', 'services:', 'image:'] },
+    { name: 'Configuration de déploiement (deploy.sh)', path: '/deploy.sh', keywords: ['#!/bin/bash', '#!/bin/sh'] }
   ];
 
   let exposed = [];
-  
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+  let soft404Content = null;
+  try {
+    const fakeUrl = `${cleanBaseUrl}/comportement-erreur-aleatoire-${Math.random().toString(36).substring(7)}.html`;
+    const baselineRes = await axios.get(fakeUrl, { timeout: 2000, validateStatus: () => true });
+    if (baselineRes.status === 200) {
+      soft404Content = typeof baselineRes.data === 'string' ? baselineRes.data.substring(0, 1000) : null;
+    }
+  } catch (e) {
+  }
+
   for (const file of filesToTest) {
     try {
-      const targetUrl = `${baseUrl.replace(/\/$/, '')}${file.path}`;
+      const targetUrl = `${cleanBaseUrl}${file.path}`;
       
       const response = await axios.get(targetUrl, { 
         timeout: 2000, 
+        responseType: 'text',
         validateStatus: (status) => status === 200 
       });
 
-      if (response.status === 200) {
-        exposed.push(file.name);
+      const body = response.data;
+
+      if (soft404Content && typeof body === 'string') {
+        if (body.substring(0, 1000) === soft404Content || body === soft404Content) {
+          continue; 
+        }
       }
+
+      if (typeof body === 'string' && (body.includes('window.location') || body.includes('http-equiv="refresh"'))) {
+        continue;
+      }
+
+      if (file.keywords && typeof body === 'string') {
+        const hasKeyword = file.keywords.some(keyword => body.includes(keyword));
+        if (!hasKeyword) {
+          continue; 
+        }
+      }
+
+      exposed.push(file.name);
+
     } catch (err) {
     }
   }
